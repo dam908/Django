@@ -23,9 +23,25 @@ class BookingSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Время окончания должно быть позже времени начала"
             )
-        room = data['room']
+        
         start_time = data['start_time']
         end_time = data['end_time']
+
+        start_hour = start_time.hour
+        end_hour = end_time.hour
+        end_minute = end_time.minute
+        
+        if start_hour < 9 or start_hour >= 18:
+            raise serializers.ValidationError(
+                "Время начала брони должно быть в рабочие часы (с 09:00 до 18:00)"
+            )
+        
+        if end_hour > 18 or (end_hour == 18 and end_minute > 0) or end_hour < 9:
+            raise serializers.ValidationError(
+                "Время окончания брони должно быть в рабочие часы (с 09:00 до 18:00)"
+            )
+        
+        room = data['room']
         overlapping_bookings = Booking.objects.filter(
             room=room,
             start_time__lt=end_time,
